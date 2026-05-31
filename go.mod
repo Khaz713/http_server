@@ -1,3 +1,3 @@
-module http_server
+module github.com/Khaz713/http_server
 
-go 1.25
+go 1.25.3
