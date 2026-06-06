@@ -40,17 +40,19 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 }
 
 func profanitiesCheck(message string) string {
-	profanities := []string{"kerfuffle", "sharbert", "fornax"}
-	cleanedMessage := message
-	for _, profanity := range profanities {
-		splitMessage := strings.Split(cleanedMessage, " ")
-		for i, word := range splitMessage {
-			if strings.ToLower(word) == strings.ToLower(profanity) {
-				splitMessage[i] = "****"
-			}
-		}
-		cleanedMessage = strings.Join(splitMessage, " ")
+	profanities := map[string]struct{}{
+		"fornax":    {},
+		"kerfuffle": {},
+		"sharbert":  {},
 	}
+	words := strings.Split(message, " ")
+	for i, word := range words {
+		lowerWord := strings.ToLower(word)
+		if _, ok := profanities[lowerWord]; ok {
+			words[i] = "****"
+		}
+	}
+	cleanedMessage := strings.Join(words, " ")
 
 	return cleanedMessage
 }
