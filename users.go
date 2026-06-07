@@ -122,3 +122,48 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	})
 
 }
+
+func (cfg *apiConfig) handlerUpdateUser(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	newUser := parametersUser{}
+	err := decoder.Decode(&newUser)
+	if err != nil {
+		log.Printf("Error decoding user parameters: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error decoding user parameters", err)
+		return
+	}
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		log.Printf("Error getting bearer token: %s", err)
+		respondWithError(w, http.StatusUnauthorized, "Error getting bearer token", err)
+		return
+	}
+	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
+	if err != nil {
+		log.Printf("Error validating bearer token: %s", err)
+		respondWithError(w, http.StatusUnauthorized, "Error validating bearer token", err)
+		return
+	}
+	hashedPass, err := auth.HashPassword(newUser.Password)
+	if err != nil {
+		log.Printf("Error hashing password: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error hashing password", err)
+		return
+	}
+	updatedUser, err := cfg.db.UpdateUserByID(r.Context(), database.UpdateUserByIDParams{
+		ID:             userID,
+		Email:          newUser.Email,
+		HashedPassword: hashedPass,
+	})
+	if err != nil {
+		log.Printf("Error updating user: %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Error updating user", err)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, User{
+		ID:        updatedUser.ID,
+		CreatedAt: updatedUser.CreatedAt,
+		UpdatedAt: updatedUser.UpdatedAt,
+		Email:     updatedUser.Email,
+	})
+}
