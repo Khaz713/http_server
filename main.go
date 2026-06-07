@@ -18,6 +18,7 @@ type apiConfig struct {
 	db             *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaKey       string
 }
 
 func (cfg *apiConfig) middlewareMetricInc(next http.Handler) http.Handler {
@@ -35,6 +36,7 @@ func main() {
 	cfg := &apiConfig{}
 	cfg.platform = os.Getenv("PLATFORM")
 	cfg.jwtSecret = os.Getenv("JWT_SECRET")
+	cfg.polkaKey = os.Getenv("POLKA_KEY")
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {

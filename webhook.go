@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Khaz713/chirpy/internal/auth"
 	"github.com/Khaz713/chirpy/internal/database"
 	"github.com/google/uuid"
 )
@@ -17,9 +18,14 @@ type parametersWebhook struct {
 }
 
 func (cfg *apiConfig) handlerWebhook(w http.ResponseWriter, r *http.Request) {
+	_, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		log.Printf("Error getting API key: %v", err)
+		w.WriteHeader(http.StatusUnauthorized)
+	}
 	decoder := json.NewDecoder(r.Body)
 	params := &parametersWebhook{}
-	err := decoder.Decode(params)
+	err = decoder.Decode(params)
 	if err != nil {
 		log.Printf("Error decoding body: %v", err)
 		w.WriteHeader(http.StatusBadRequest)
