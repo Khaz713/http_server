@@ -17,6 +17,7 @@ type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
 	platform       string
+	jwtSecret      string
 }
 
 func (cfg *apiConfig) middlewareMetricInc(next http.Handler) http.Handler {
@@ -33,6 +34,7 @@ func main() {
 	const port = "8080"
 	cfg := &apiConfig{}
 	cfg.platform = os.Getenv("PLATFORM")
+	cfg.jwtSecret = os.Getenv("JWT_SECRET")
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -50,6 +52,8 @@ func main() {
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfg.handlerChirpID)
 	mux.HandleFunc("POST /api/users", cfg.handlerUsers)
 	mux.HandleFunc("POST /api/login", cfg.handlerLogin)
+	mux.HandleFunc("POST /api/refresh", cfg.handlerRefreshToken)
+	mux.HandleFunc("POST /api/revoke", cfg.handlerRevokeToken)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
